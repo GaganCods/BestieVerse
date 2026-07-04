@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>BestieVerse | Wholesome Friendship App</title>
+  
+  <!-- SEO & PWA Headers -->
+  <meta name="description" content="Welcome to the BestieVerse! A personalized offline mini-app built for a best friend. Packed with arcade games, quizzes, stickers, memes, and fortunes.">
+  <meta name="theme-color" content="#9B82C1">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/themes.css">
+  
+  <!-- Export Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <style>
+    /* Inline styles for Splash Screen & Mascot */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      text-align: center;
+      padding: 1.5rem;
+    }
+    .splash-logo {
+      font-size: 4rem;
+      animation: bounce 2s infinite;
+      margin-bottom: 1rem;
+    }
+    .splash-bar {
+      width: 150px;
+      height: 6px;
+      background: var(--lavender);
+      border-radius: 10px;
+      margin: 1.5rem auto;
+      overflow: hidden;
+    }
+    .splash-progress {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      animation: loadingBar 2.5s ease-in-out forwards;
+    }
+    
+    .mascot-container {
+      font-size: 5rem;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s;
+    }
+    .mascot-container:hover {
+      transform: scale(1.15) rotate(5deg);
+    }
+    
+    /* Fortune Cookie styles */
+    .fortune-cookie-graphic {
+      font-size: 4rem;
+      cursor: pointer;
+      display: inline-block;
+      user-select: none;
+      transition: transform 0.2s;
+      margin-bottom: 1rem;
+    }
+    .fortune-cookie-graphic:hover {
+      transform: scale(1.1) rotate(-5deg);
+    }
+    .fortune-cookie-text {
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius);
+      border-left: 5px solid var(--accent);
+      box-shadow: var(--shadow);
+      font-family: var(--font-fancy);
+      font-size: 1.25rem;
+      color: #3D3A45;
+      display: none;
+      animation: popIn 0.3s ease-out forwards;
+    }
+    
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(61, 58, 69, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. FULLSCREEN SPLASH SCREEN -->
+  <div id="splash-screen">
+    <div class="splash-logo">👾🕹️🌸</div>
+    <h1 style="font-family:var(--font-heading); font-size:2.2rem; color:var(--primary); margin-bottom:0.5rem;">BestieVerse</h1>
+    <p style="font-size:0.9rem; color:var(--text-muted); font-weight:600;">Warning: This website may cause unexpected laughing. 😂</p>
+    <div class="splash-bar">
+      <div class="splash-progress"></div>
+    </div>
+    <p style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Loading cute memories...</p>
+  </div>
+
+  <!-- Global Particle Canvas Background -->
+  <canvas id="effects-canvas"></canvas>
+
+  <!-- 1. LANDING PAGE SHELL -->
+  <div id="landing-shell" class="shell-view" style="display:none; max-width:650px; margin: 4rem auto; padding: 1.5rem; text-align: center; position: relative; z-index: 2;">
+    <div class="glass-card" style="display: flex; flex-direction: column; gap: 1.8rem; padding: 3rem 2rem;">
+      <div style="font-size: 5rem; animation: bounce 2s infinite;">👾💝🎮</div>
+      <h1 style="font-family: var(--font-heading); font-size: 2.8rem; color: var(--primary); font-weight: 800; line-height: 1.2; margin: 0;">BestieVerse</h1>
+      <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text); margin: 0;">Friendship Website Builder</h2>
+      <p style="font-size: 1.02rem; line-height: 1.6; color: var(--text-muted); margin: 0;">
+        Build a personalized interactive mini-app for your best friend! Customize retro arcade games, create custom quizzes, select challenges, and lock a message in a time capsule. No login required.
+      </p>
+      <a href="#/create" class="btn-primary" style="font-size: 1.15rem; padding: 0.9rem 2.2rem; align-self: center;">Create Bestie Card 🚀</a>
+      
+      <div id="landing-history-section" style="margin-top: 1.5rem; border-top: 1px dashed var(--lavender); padding-top: 1.5rem; text-align: left; display: none;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--primary); margin-bottom: 0.8rem;">📁 Your Created Pages</h3>
+        <div id="landing-history-list" style="display: flex; flex-direction: column; gap: 0.8rem;">
+          <!-- Dynamically rendered creator card history -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. CREATOR FORM SHELL -->
+  <div id="creator-shell" class="shell-view" style="display:none; max-width:700px; margin: 2rem auto 6rem auto; padding: 1.5rem; position: relative; z-index: 2;">
+    <div class="section-header">
+      <h1 class="section-title" style="font-size: 2.4rem;">🛠️ BestieVerse Builder</h1>
+      <p class="section-subtitle">No signup. Design a custom experience and get a unique share link!</p>
+    </div>
+
+    <form id="creator-form" style="display: flex; flex-direction: column; gap: 2rem;">
+      <!-- Section 1: Friendship Details -->
+      <div class="glass-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--primary); margin-bottom: 1.2rem; border-bottom: 2px solid var(--lavender); padding-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">👥 1. Friendship Details</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Your Name (Creator)</label>
+            <input type="text" id="c-creator-name" class="form-input" placeholder="e.g. Gagan" required>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Friend's Name</label>
+            <input type="text" id="c-friend-name" class="form-input" placeholder="e.g. Priya" required>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Friend's Nickname</label>
+            <input type="text" id="c-friend-nickname" class="form-input" placeholder="e.g. Pika" required>
+          </div>
+          <div class="grid-2" style="gap: 1rem;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Friends Since</label>
+              <input type="number" id="c-friends-since" class="form-input" placeholder="e.g. 2020" min="1990" max="2026" required>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Relationship</label>
+              <select id="c-relationship" class="form-input" required>
+                <option value="Best Friend">Best Friend 💖</option>
+                <option value="Classmate">Classmate 📚</option>
+                <option value="College Friend">College Friend 🎓</option>
+                <option value="Online Friend">Online Friend 🌐</option>
+                <option value="Cousin">Cousin 🧬</option>
+                <option value="Office Friend">Office Friend 💼</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Friend's Favorites -->
+      <div class="glass-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--primary); margin-bottom: 1.2rem; border-bottom: 2px solid var(--lavender); padding-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">🌟 2. Friend's Favorites</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="grid-3" style="gap: 1rem;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Favorite Color</label>
+              <input type="text" id="c-fav-color" class="form-input" placeholder="e.g. Purple" required>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Favorite Food</label>
+              <input type="text" id="c-fav-food" class="form-input" placeholder="e.g. Pizza" required>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Favorite Emoji</label>
+              <input type="text" id="c-fav-emoji" class="form-input" placeholder="e.g. 😂" required>
+            </div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Personal Message / Tribute Note</label>
+            <textarea id="c-message" class="form-input" placeholder="Write a short wholesome letter for the final surprise ending screen..." style="height: 100px; resize: none;" required></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Drawing Signature & Choosing Theme -->
+      <div class="glass-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--primary); margin-bottom: 1.2rem; border-bottom: 2px solid var(--lavender); padding-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">🎨 3. Themes & Signature</h3>
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <div class="grid-2" style="gap: 1rem;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Select Theme Style</label>
+              <select id="c-theme" class="form-input" required>
+                <option value="pastel">Pastel 🌸</option>
+                <option value="galaxy">Galaxy 🌌</option>
+                <option value="nature">Nature 🌿</option>
+                <option value="anime">Anime Blossom 🌸</option>
+                <option value="minimal">Minimal Sharp 🖤</option>
+                <option value="cute">Cute Strawberry 🍓</option>
+                <option value="dark">Dark Slate 🌙</option>
+                <option value="neon">Neon Cyberpunk ⚡</option>
+                <option value="coffee">Coffee Latte ☕</option>
+                <option value="study">Study Notebook ✏️</option>
+                <option value="gaming">Gaming Grid 🎮</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Certificate Style</label>
+              <select id="c-cert-style" class="form-input" required>
+                <option value="classic">Classic Elegant 📜</option>
+                <option value="neon">Glowing Neon ⚡</option>
+                <option value="cute">Cutesy Flower 🌸</option>
+                <option value="arcade">Retro 8-Bit 🕹️</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Draw Your Signature (for Certificate)</label>
+            <div style="background: white; border-radius: 16px; border: 2px dashed var(--primary); padding: 0.3rem; position: relative;">
+              <canvas id="signature-pad" width="550" height="130" style="display: block; width: 100%; height: 130px; background: transparent; cursor: crosshair; touch-action: none;"></canvas>
+              <button type="button" id="clear-sig-btn" class="btn-secondary" style="position: absolute; bottom: 8px; right: 8px; padding: 0.2rem 0.6rem; font-size: 0.72rem; border-radius: 8px;">Clear Pad</button>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem;">Draw on the pad using your mouse or touch screen. This will appear on the final certificate!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Activities Selection -->
+      <div class="glass-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--primary); margin-bottom: 1.2rem; border-bottom: 2px solid var(--lavender); padding-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">🕹️ 4. Activities & Content</h3>
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text);">Select Arcade Games (Choose at least 3)</label>
+            <div class="grid-2" style="gap: 0.5rem;">
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="ttt" checked> Tic Tac Toe ❌⭕</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="rps" checked> Rock Paper Scissors ✂️</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="memory" checked> Card Match 🎴</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="sliding" checked> Sliding Board 🧩</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="simon" checked> Simon Says 🔴🟢</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="scramble" checked> Word Scramble 🔠</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="number-guess" checked> Number Guess 🔢</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="color-match" checked> Color Matcher 🎨</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="whack-a-mole" checked> Whack-A-Mole  hamster</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-games" value="bubble-pop" checked> Bubble Popper 🫧</label>
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text);">Select Challenges to Include</label>
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-challenges" value="0" checked> Drink a glass of water right now! 💧</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-challenges" value="1" checked> Send your favorite reaction sticker/emoji to me. 💬</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-challenges" value="2" checked> Smile at the screen for 10 seconds straight. 😊</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-challenges" value="3" checked> Close your eyes and take three deep breaths. 🧘</label>
+              <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="c-challenges" value="4" checked> Stand up and stretch your arms for 10 seconds. 🤸</label>
+            </div>
+          </div>
+
+          <div class="grid-2" style="gap: 1rem;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Number of Quiz Questions</label>
+              <select id="c-quiz-count" class="form-input">
+                <option value="5">5 Questions (Short Quiz) ⚡</option>
+                <option value="10" selected>10 Questions (Regular Tour) 🎯</option>
+                <option value="15">15 Questions (Hardcore BFF) 🧠</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);">Security Passcode (Optional)</label>
+              <input type="password" id="c-passcode" class="form-input" placeholder="e.g. 1234" maxlength="6">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="text-align: center; margin-top: 1rem;">
+        <button type="submit" id="generate-site-btn" class="btn-primary" style="font-size: 1.15rem; padding: 0.9rem 3rem;">
+          Generate BestieVerse Site ✨
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 3. CREATOR DASHBOARD SHELL -->
+  <div id="dashboard-shell" class="shell-view" style="display:none; max-width:650px; margin: 4rem auto; padding: 1.5rem; position: relative; z-index: 2;">
+    <div class="glass-card" style="display: flex; flex-direction: column; gap: 2rem; text-align: center;">
+      <div style="font-size: 4rem; animation: bounce 2s infinite;">🎉🥳✨</div>
+      <h2 style="font-family: var(--font-heading); color: var(--primary); font-size: 1.8rem; margin: 0;">Your BestieVerse is Live!</h2>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">We generated a personalized card for your best friend. Copy the link below and send it to them!</p>
+
+      <!-- Copyable URL -->
+      <div style="background: var(--lavender); padding: 1rem; border-radius: 16px; border: 1px solid var(--card-border); text-align: left; display: flex; flex-direction: column; gap: 0.5rem;">
+        <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">Friend Share URL 🔗</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <input type="text" id="dash-friend-url" class="form-input" readonly style="flex: 1; font-weight: 600; font-size: 0.88rem; background: rgba(255,255,255,0.9);">
+          <button id="copy-friend-url-btn" class="btn-primary" style="padding: 0.7rem 1.2rem; font-size: 0.85rem; border-radius: 12px;">Copy</button>
+        </div>
+      </div>
+
+      <!-- QR Code Section -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin: 0.5rem 0;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--text); margin: 0;">Scan QR Code</h3>
+        <div id="dash-qr-container" style="background: white; padding: 0.8rem; border-radius: 16px; border: 1px solid var(--card-border); width: 160px; height: 160px; display: flex; align-items: center; justify-content: center;">
+          <img id="dash-qr-img" src="" alt="Link QR Code" style="width: 100%; height: 100%; display: block; object-fit: contain;">
+        </div>
+      </div>
+
+      <!-- Creator Dashboard actions -->
+      <div style="border-top: 1px dashed var(--lavender); padding-top: 1.5rem; text-align: left; display: flex; flex-direction: column; gap: 1rem;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--primary); margin-bottom: 0.2rem;">📊 Results & Management</h3>
+        
+        <div style="display: flex; gap: 0.8rem; width: 100%;">
+          <a id="dash-view-results-btn" class="btn-accent" style="flex: 1; font-size: 0.9rem; border-radius: 12px; padding: 0.8rem;">View Results 🏆</a>
+          <button id="dash-delete-btn" class="btn-secondary" style="flex: 1; font-size: 0.9rem; color: #D66D57; border-color: rgba(214, 109, 87, 0.3); border-radius: 12px; padding: 0.8rem;">Delete Card 🗑️</button>
+        </div>
+        
+        <a href="#/" class="btn-secondary" style="width: 100%; justify-content: center; font-size: 0.9rem; border-radius: 12px; padding: 0.8rem;">Back to Home Page 🏠</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. FRIEND EXPERIENCE SHELL (Original app-shell updated) -->
+  <div id="app-shell" class="shell-view" style="display:none;">
+    
+    <!-- DESKTOP TOP HEADER -->
+    <header class="desktop-header">
+      <div class="logo-wrap" onclick="window.location.hash = '#/'">
+        <span>👾</span> BestieVerse
+      </div>
+      
+      <nav class="desktop-nav">
+        <a class="nav-link active" data-target="smile-view">🏠 Daily Smile</a>
+        <a class="nav-link" data-target="games-view">🎮 Arcade</a>
+        <a class="nav-link" data-target="quiz-view">🧩 Quizzes</a>
+        <a class="nav-link" data-target="meme-view">😂 Meme Corner</a>
+        <a class="nav-link" data-target="achievements-view">🏆 Stickers & Caps</a>
+        <a class="nav-link cert-nav-link" data-target="certificate-view" style="display:none;">📜 Certificate</a>
+      </nav>
+      
+      <div class="header-actions">
+        <span style="font-weight:700; font-size:0.9rem; background:var(--yellow); padding:0.4rem 0.8rem; border-radius:30px; display:inline-flex; align-items:center; gap:0.3rem; border:1px solid var(--accent);">
+          🔥 <span id="streak-count-display">0</span> Days
+        </span>
+        <button id="sound-toggle-btn" class="btn-secondary" style="width:40px; height:40px; padding:0; border-radius:50%;">🔊</button>
+        <button id="theme-toggle-btn" class="btn-secondary" style="width:40px; height:40px; padding:0; border-radius:50%;">🌙</button>
+      </div>
+    </header>
+
+    <!-- MOBILE FLOATING TOP BAR -->
+    <div class="mobile-top-bar">
+      <div class="logo-wrap" style="font-size:1.25rem;" onclick="window.location.hash = '#/'">
+        <span>👾</span> BestieVerse
+      </div>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <button id="mobile-sound-toggle-btn" class="btn-secondary" style="width:36px; height:36px; padding:0; border-radius:50%; font-size:0.9rem;">🔊</button>
+        <button id="mobile-theme-toggle-btn" class="btn-secondary" style="width:36px; height:36px; padding:0; border-radius:50%; font-size:0.9rem;">🌙</button>
+      </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="mobile-nav">
+      <a class="mobile-nav-link active" data-target="smile-view"><span class="icon">🏠</span>Smile</a>
+      <a class="mobile-nav-link" data-target="games-view"><span class="icon">🎮</span>Arcade</a>
+      <a class="mobile-nav-link" data-target="quiz-view"><span class="icon">🧩</span>Quizzes</a>
+      <a class="mobile-nav-link" data-target="meme-view"><span class="icon">😂</span>Memes</a>
+      <a class="mobile-nav-link" data-target="achievements-view"><span class="icon">🏆</span>Stickers</a>
+      <a class="mobile-nav-link cert-nav-link" data-target="certificate-view" style="display:none;"><span class="icon">📜</span>Cert</a>
+    </nav>
+
+    <!-- VIEWS VIEWPORT -->
+    <main class="main-content">
+      <!-- Passcode overlay modal block -->
+      <div id="passcode-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--background); z-index:2000; align-items:center; justify-content:center; padding:1.5rem;">
+        <div class="glass-card" style="text-align:center; max-width:350px; display:flex; flex-direction:column; gap:1.2rem; width:100%;">
+          <div style="font-size:3.5rem;">🔒</div>
+          <h3 style="font-family:var(--font-heading); color:var(--primary); font-size:1.3rem;">Private BestieVerse</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted);">This page is protected by a passcode. Enter the passcode below to enter.</p>
+          <input type="password" id="passcode-input" class="form-input" placeholder="Enter Passcode..." style="text-align:center;" maxlength="6">
+          <button id="submit-passcode-btn" class="btn-primary" style="width:100%;">Unlock Site 🔑</button>
+          <div id="passcode-error" style="color:#D66D57; font-size:0.85rem; font-weight:700; display:none;">Incorrect Passcode! ❌</div>
+        </div>
+      </div>
+
+      <div class="view-container">
+
+        <!-- 2. WELCOME VIEW -->
+        <section id="welcome-view" class="view">
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:60vh; gap:1.5rem; max-width:550px; margin:0 auto;">
+            <div class="mascot-container animate-bounce">⭐</div>
+            <h2 id="welcome-heading" style="font-family:var(--font-heading); font-size:2.2rem; color:var(--primary); line-height:1.2;">Hi, Bestie! 👋</h2>
+            <p id="welcome-text" style="font-size:1.1rem; line-height:1.6; color:var(--text-muted);">
+              I made this little website because I thought you'd enjoy it. Tap the mascot, find hidden secrets, solve puzzles, and have fun exploring!
+            </p>
+            <div style="display:flex; gap:0.8rem; margin-top:1rem; width:100%; justify-content:center;">
+              <button id="start-btn" class="btn-primary" style="flex:1; max-width:200px;">Enter App 🚀</button>
+              <button id="random-surprise-btn" class="btn-accent" style="flex:1; max-width:200px;">Surprise Me! 🎁</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. DAILY SMILE -->
+        <section id="smile-view" class="view">
+          <div class="section-header">
+            <h2 class="section-title">🏠 Daily Smile Board</h2>
+            <p class="section-subtitle">A little capsule of positivity. Refresh to get a new joke, compliment, or smile!</p>
+          </div>
+          
+          <div style="max-width:550px; margin:0 auto; display:flex; flex-direction:column; gap:1.5rem;">
+            <!-- Smile Card -->
+            <div class="glass-card" style="text-align:center; padding:2.5rem 1.5rem; border-left:6px solid var(--primary);">
+              <span id="smile-quote-type" style="font-size:0.75rem; background:var(--lavender); padding:4px 10px; border-radius:10px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:1px;">DAILY COMPLIMENT 🌟</span>
+              <h3 id="smile-quote-text" style="font-family:var(--font-fancy); font-size:2rem; line-height:1.4; color:var(--text); margin-top:1.5rem; margin-bottom:1.5rem;">
+                "You make conversations fun without even trying."
+              </h3>
+              <button id="smile-refresh-btn" class="btn-primary">Roll Smile Card 🔁</button>
+            </div>
+
+            <!-- Fortune Cookie Card -->
+            <div class="glass-card" style="text-align:center;">
+              <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:0.5rem; color:var(--primary);">🥠 Break the Fortune Cookie</h3>
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Tap the cookie below to reveal today's prediction!</p>
+              <div class="fortune-cookie-graphic">🥠</div>
+              <div class="fortune-cookie-text"></div>
+              <button id="reset-fortune-btn" class="btn-secondary" style="margin-top:1rem; padding:0.4rem 1rem; font-size:0.8rem;">Bake New Cookie 🥠</button>
+            </div>
+
+            <!-- Friendship Challenges Card -->
+            <div class="glass-card">
+              <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:0.5rem; color:var(--primary); text-align:center;">💪 Wholesome Challenges</h3>
+              <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:1.2rem;">Complete them all to earn a new sticker in your album!</p>
+              <div class="challenges-container" style="display:flex; flex-direction:column; gap:0.4rem; max-width:380px; margin:0 auto;"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. ARCADE ROOM (GAMES) -->
+        <section id="games-view" class="view">
+          <div class="section-header">
+            <h2 class="section-title">🎮 Arcade Room</h2>
+            <p class="section-subtitle">Play wholesome retro mini-games to challenge your scores!</p>
+          </div>
+          
+          <!-- sub nav tabs -->
+          <div class="sub-nav-tabs">
+            <!-- Tabs are rendered dynamically based on active games -->
+          </div>
+
+          <div id="games-content-area" style="max-width:550px; margin:0 auto;"></div>
+        </section>
+
+        <!-- 5. QUIZZES -->
+        <section id="quiz-view" class="view">
+          <div class="section-header">
+            <h2 class="section-title">🧩 Quiz Zone</h2>
+            <p class="section-subtitle">Test your memory and preferences in these funny quizzes!</p>
+          </div>
+
+          <div class="sub-nav-tabs">
+            <button class="btn-secondary quiz-tab active" data-type="friendship">BFF Trivia</button>
+            <button class="btn-secondary quiz-tab" data-type="guess-emoji">Guess Emojis</button>
+            <button class="btn-secondary quiz-tab" data-type="this-that">This or That</button>
+            <button class="btn-secondary quiz-tab" data-type="rapid-fire">Rapid Fire</button>
+          </div>
+
+          <div id="quiz-content-area" style="max-width:550px; margin:0 auto;"></div>
+        </section>
+
+        <!-- 6. MEME CORNER -->
+        <section id="meme-view" class="view">
+          <div class="section-header">
+            <h2 class="section-title">😂 Meme Corner</h2>
+            <p class="section-subtitle">Funny custom cards relating to school, sleep schedules, and group chat tea.</p>
+          </div>
+
+          <div class="meme-corner-cards grid-2">
+            <!-- Meme cards dynamically rendered -->
+          </div>
+        </section>
+
+        <!-- 7. STICKERS & TIME CAPSULES (ACHIEVEMENTS) -->
+        <section id="achievements-view" class="view">
+          <div class="section-header">
+            <h2 class="section-title">🏆 Stickers & Caps</h2>
+            <p class="section-subtitle">Review your collected stickers, unlocked badges, and lock messages for next year.</p>
+          </div>
+
+          <div class="grid-2">
+            <!-- Left: Stickers & Badges -->
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+              <div class="glass-card">
+                <h3 style="font-family:var(--font-heading); font-size:1.3rem; margin-bottom:1rem; text-align:center; color:var(--primary);">🌸 Sticker Album</h3>
+                <div class="stickers-list-grid" style="display:flex; gap:0.8rem; justify-content:center; flex-wrap:wrap; min-height:80px;"></div>
+              </div>
+              
+              <div class="glass-card">
+                <h3 style="font-family:var(--font-heading); font-size:1.3rem; margin-bottom:1rem; text-align:center; color:var(--primary);">🏆 Unlocked Badges</h3>
+                <div class="badges-list-grid" style="display:grid; grid-template-columns:1fr; gap:0.8rem;"></div>
+              </div>
+            </div>
+
+            <!-- Right: Future Time Capsule -->
+            <div id="capsule-view-content" style="display:flex; flex-direction:column; gap:1.5rem;"></div>
+          </div>
+          
+          <!-- Shortcut button to navigate to Tribute ending -->
+          <div style="text-align:center; margin-top:2.5rem;">
+            <button class="btn-accent" onclick="document.querySelector('.mobile-nav-link[data-target=ending-view]').click()" style="animation:pulse 1.5s infinite;">Open Final Surprise! 🎁</button>
+          </div>
+        </section>
+
+        <!-- 8. SURPRISE ENDING (TRIBUTE) -->
+        <section id="ending-view" class="view">
+          <div style="max-width:550px; margin:0 auto; text-align:center; padding: 2.5rem 1rem; display:flex; flex-direction:column; gap:1.5rem;">
+            <div style="font-size:4rem; animation:pulse 1.2s infinite;">💖🎉🌸</div>
+            <h2 id="ending-heading" style="font-family:var(--font-heading); font-size:2.2rem; color:var(--primary); line-height:1.2;">Forever Besties!</h2>
+            <div id="ending-message" class="glass-card" style="text-align:left; font-size:0.98rem; line-height:1.6; color:var(--text); max-height:280px; overflow-y:auto; border-left:6px solid var(--accent); padding:1.5rem;">
+              Thanks for checking out this little project. I hope it made you smile, gave you a few laughs, and made your day a little bit brighter. 
+              <br><br>
+              Having you as my best friend is one of the absolute best highlights of my life. Here's to many more inside jokes, shared food runs, and 4-page typo rants! 😊
+              <br><br>
+              Stay awesome, bestie! ❤️
+            </div>
+            <button id="end-claim-cert-btn" class="btn-accent" style="display:none; align-self:center; font-size:1.05rem; padding:0.8rem 2rem; border-radius:30px; animation:pulse 1.2s infinite;">Claim Friendship Certificate! 📜</button>
+            <button class="btn-primary" onclick="window.location.reload();" style="align-self:center;">Play Again 🔁</button>
+          </div>
+        </section>
+
+        <!-- 9. CERTIFICATE VIEW -->
+        <section id="certificate-view" class="view">
+          <div style="max-width: 550px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; align-items: center;">
+            
+            <!-- Certificate frame -->
+            <div id="friend-certificate" class="cert-container" style="width: 100%; aspect-ratio: 1.414/1; background: #FFF8E7; padding: 2.2rem; position: relative; border-radius: 12px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; color: #3D3A45; border: 12px double #9B82C1;">
+              
+              <div style="font-size: 0.78rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #8369A8; margin-bottom: 0.2rem;">Official Certificate of Friendship</div>
+              
+              <h2 style="font-family: var(--font-heading); font-size: 1.6rem; color: #9B82C1; margin: 0.3rem 0; font-weight: 800;">🏆 CERTIFIED BEST FRIEND 🏆</h2>
+              
+              <div style="font-size: 0.8rem; color: #747180;">This certificate is proudly awarded to</div>
+              
+              <div id="cert-recipient-name" style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; text-transform: uppercase; color: #3D3A45; border-bottom: 2px solid var(--accent); padding-bottom: 0.1rem; width: 85%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; line-height: 1.2; margin: 0.3rem 0;">PRIYA</div>
+              
+              <div style="font-size: 0.78rem; line-height: 1.4; color: #747180; padding: 0 0.8rem; margin-bottom: 0.4rem;">
+                For successfully completing the interactive challenges, demonstrating outstanding loyalty, compatibility, and best-friend qualities.
+              </div>
+              
+              <div style="display: flex; gap: 0.5rem; justify-content: space-around; width: 100%; align-items: flex-end; margin-top: 0.4rem;">
+                <!-- Left: Date -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem;">
+                  <div style="font-family: monospace; font-size: 0.8rem; font-weight: 600;" id="cert-date">July 2026</div>
+                  <div style="border-top: 1px solid #747180; width: 75px; font-size: 0.65rem; color: #747180; padding-top: 0.15rem;">Date</div>
+                </div>
+                
+                <!-- Center: Verification QR -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.15rem;">
+                  <img id="cert-verify-qr" src="" alt="Verification QR" style="width: 42px; height: 42px; display: block; border: 1px solid #ddd; background: white; padding: 2px;">
+                  <span style="font-size: 0.52rem; color: #747180; font-family: monospace;" id="cert-id-text">ID: --</span>
+                </div>
+                
+                <!-- Right: Signature -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem;">
+                  <div style="height: 30px; width: 90px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(255,255,255,0.4); border-radius: 4px;">
+                    <img id="cert-signature-img" src="" alt="Signature" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                  </div>
+                  <div style="border-top: 1px solid #747180; width: 90px; font-size: 0.65rem; color: #747180; padding-top: 0.15rem; text-transform: capitalize; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" id="cert-creator-sig-label">Gagan</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Controls -->
+            <div style="display: flex; flex-direction: column; gap: 0.8rem; width: 100%;">
+              <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <button id="cert-download-png" class="btn-primary" style="flex: 1; font-size: 0.9rem;">Download PNG 🖼️</button>
+                <button id="cert-download-pdf" class="btn-primary" style="flex: 1; font-size: 0.9rem;">Download PDF 📄</button>
+              </div>
+              
+              <!-- Share Results -->
+              <div class="glass-card" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.8rem; text-align: center;">
+                <h4 style="font-family: var(--font-heading); font-size: 1rem; color: var(--primary);">Share Your Friendship Score!</h4>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="text" id="cert-result-url" class="form-input" readonly style="font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.9);">
+                  <button id="copy-result-url-btn" class="btn-primary" style="padding: 0.7rem 1.2rem; font-size: 0.85rem; border-radius: 12px;">Copy</button>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 0.5rem;">
+                  <a id="share-wa-btn" href="#" target="_blank" class="btn-secondary" style="padding: 0.5rem 1.0rem; font-size: 0.8rem; border-radius: 12px;">WhatsApp 💬</a>
+                  <a id="share-tg-btn" href="#" target="_blank" class="btn-secondary" style="padding: 0.5rem 1.0rem; font-size: 0.8rem; border-radius: 12px;">Telegram ✈️</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- 5. RESULT VIEWER SHELL -->
+  <div id="result-shell" class="shell-view" style="display:none; max-width:650px; margin: 4rem auto; padding: 1.5rem; position: relative; z-index: 2;">
+    <div class="glass-card" style="display: flex; flex-direction: column; gap: 1.8rem;">
+      <div style="text-align: center;">
+        <div style="font-size: 4rem; animation: pulse 1.5s infinite;">🏆🏅🎓</div>
+        <h2 style="font-family: var(--font-heading); color: var(--primary); font-size: 1.8rem; margin: 0.5rem 0;" id="res-header">Friendship Challenge Completed!</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;" id="res-subtitle">Here is what your friend achieved in their BestieVerse journey.</p>
+      </div>
+
+      <!-- Score card -->
+      <div style="background: var(--yellow); border: 2px dashed var(--accent); border-radius: 20px; padding: 1.5rem; text-align: center;">
+        <h3 style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.3rem; letter-spacing: 1px;">Friendship Score</h3>
+        <div style="font-size: 3.5rem; font-weight: 800; color: var(--accent);" id="res-score">--%</div>
+        <div style="font-size: 1.1rem; font-weight: 700; margin-top: 0.3rem;" id="res-level">--</div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="grid-2" style="gap: 1rem;">
+        <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid var(--card-border); padding: 0.8rem; border-radius: 16px; display: flex; flex-direction: column; gap: 0.2rem;">
+          <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Correct Answers</span>
+          <strong style="font-size: 1.15rem;" id="res-correct">--/--</strong>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid var(--card-border); padding: 0.8rem; border-radius: 16px; display: flex; flex-direction: column; gap: 0.2rem;">
+          <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Time Taken</span>
+          <strong style="font-size: 1.15rem;" id="res-time">--</strong>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid var(--card-border); padding: 0.8rem; border-radius: 16px; display: flex; flex-direction: column; gap: 0.2rem;">
+          <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Favorite Emoji choice</span>
+          <strong style="font-size: 1.15rem;" id="res-emoji">--</strong>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid var(--card-border); padding: 0.8rem; border-radius: 16px; display: flex; flex-direction: column; gap: 0.2rem;">
+          <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Favorite Food choice</span>
+          <strong style="font-size: 1.15rem;" id="res-food">--</strong>
+        </div>
+      </div>
+
+      <!-- Detailed Choices -->
+      <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid var(--card-border); padding: 1.25rem; border-radius: 16px;">
+        <h4 style="font-family: var(--font-heading); font-size: 1rem; margin-bottom: 0.6rem; color: var(--primary);">This or That Choices</h4>
+        <div id="res-choices" style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.88rem;">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+
+      <!-- Action links -->
+      <div style="border-top: 1px dashed var(--lavender); padding-top: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem;">
+        <button id="res-download-cert-btn" class="btn-primary" style="width: 100%; font-size: 1rem; padding: 0.8rem;">View Certificate 📜</button>
+        <a href="#/" class="btn-secondary" style="width: 100%; justify-content: center; font-size: 0.9rem; padding: 0.8rem;">Back to Home Page 🏠</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. CERTIFICATE VERIFICATION SHELL -->
+  <div id="verify-shell" class="shell-view" style="display:none; max-width:600px; margin: 5rem auto; padding: 1.5rem; position: relative; z-index: 2;">
+    <div class="glass-card" style="display: flex; flex-direction: column; gap: 1.8rem; text-align: center;">
+      <div>
+        <div style="font-size: 5rem; color: #4A8B80;">✅</div>
+        <h2 style="font-family: var(--font-heading); color: #4A8B80; font-size: 1.8rem; margin: 0.3rem 0;">Verified Certificate</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">This is an official verification page for the BestieVerse Friendship Certificate.</p>
+      </div>
+
+      <div style="border: 1px solid var(--card-border); border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.5);">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+          <tr style="border-bottom: 1px solid var(--card-border);">
+            <td style="padding: 0.75rem; font-weight: 700; color: var(--text-muted);">Certificate ID</td>
+            <td style="padding: 0.75rem; font-family: monospace;" id="v-cert-id">--</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--card-border);">
+            <td style="padding: 0.75rem; font-weight: 700; color: var(--text-muted);">Recipient Name</td>
+            <td style="padding: 0.75rem; font-weight: 600;" id="v-friend-name">--</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--card-border);">
+            <td style="padding: 0.75rem; font-weight: 700; color: var(--text-muted);">Awarded By</td>
+            <td style="padding: 0.75rem; font-weight: 600;" id="v-creator-name">--</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--card-border);">
+            <td style="padding: 0.75rem; font-weight: 700; color: var(--text-muted);">Friendship Score</td>
+            <td style="padding: 0.75rem; font-weight: 700; color: var(--primary);" id="v-score">--</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--card-border);">
+            <td style="padding: 0.75rem; font-weight: 700; color: var(--text-muted);">Friendship Level</td>
+            <td style="padding: 0.75rem;" id="v-level">--</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.75rem; font-weight: 700; color: var(--text-muted);">Awarded Date</td>
+            <td style="padding: 0.75rem;" id="v-date">--</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background: rgba(205, 240, 234, 0.4); border: 1px solid #4A8B80; border-radius: 12px; padding: 0.8rem; color: #376F65; font-weight: 600; font-size: 0.9rem;">
+        🎉 Status: Officially Certified Besties for Life!
+      </div>
+
+      <a href="#/" class="btn-primary" style="align-self: center; padding: 0.8rem 2rem;">Visit BestieVerse 🚀</a>
+    </div>
+  </div>
+
+
+  <!-- JavaScript module loader -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

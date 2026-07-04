@@ -1,0 +1,310 @@
+/* BestieVerse - Dynamic Theme Stylesheets */
+
+/* Light mode specifics (default) */
+[data-theme="light"] {
+  --scrollbar-bg: #E8DFF5;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] {
+  --scrollbar-bg: #3B3447;
+}
+
+[data-theme="dark"] select.form-input option {
+  background-color: #1C1A22;
+  color: #F2EEF7;
+}
+
+[data-theme="dark"] img,
+[data-theme="dark"] svg {
+  filter: brightness(0.9) contrast(1.05);
+}
+
+/* Custom indicator styles for theme switch button */
+#theme-toggle-btn {
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+#theme-toggle-btn:hover {
+  background: var(--lavender);
+}
+
+/* ==========================================================================
+   11 UNIQUE THEME STYLES (Modifying core design tokens dynamically)
+   ========================================================================== */
+
+/* 1. PASTEL (Default Soft & Sweet) */
+[data-theme-style="pastel"] {
+  --background: #FCFCFF;
+  --text: #3D3A45;
+  --text-muted: #747180;
+  --lavender: #E8DFF5;
+  --sky-blue: #F0F4F8;
+  --peach: #FCE1D4;
+  --mint: #E1F8F6;
+  --yellow: #FFF8E7;
+  --primary: #9B82C1;
+  --primary-hover: #8369A8;
+  --accent: #FF9B85;
+  --accent-hover: #E0826C;
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(255, 255, 255, 0.6);
+  --shadow: 0 10px 30px rgba(155, 130, 193, 0.1);
+  --radius: 24px;
+}
+
+/* 2. GALAXY (Deep Purple Space Vibe) */
+[data-theme-style="galaxy"] {
+  --background: #0B001A;
+  --text: #F0E6FF;
+  --text-muted: #BCA3E0;
+  --lavender: rgba(155, 130, 193, 0.2);
+  --sky-blue: rgba(135, 206, 250, 0.2);
+  --peach: rgba(255, 192, 203, 0.25);
+  --mint: rgba(127, 255, 212, 0.15);
+  --yellow: rgba(255, 255, 224, 0.15);
+  --primary: #D4A3FF;
+  --primary-hover: #E3C4FF;
+  --accent: #FF85FF;
+  --accent-hover: #FFB3FF;
+  --card-bg: rgba(26, 0, 51, 0.6);
+  --card-border: rgba(212, 163, 255, 0.25);
+  --shadow: 0 10px 40px rgba(212, 163, 255, 0.2);
+  --radius: 24px;
+  background-image: radial-gradient(circle at 50% 50%, #15002E 0%, #0B001A 80%);
+}
+
+/* 3. NATURE (Earthy Sage & Peach) */
+[data-theme-style="nature"] {
+  --background: #EAECE6;
+  --text: #2C3E2B;
+  --text-muted: #5E705D;
+  --lavender: #D3DFD2;
+  --sky-blue: #E2ECE9;
+  --peach: #F3DDD2;
+  --mint: #D9EBE5;
+  --yellow: #F6F3E6;
+  --primary: #5A7E64;
+  --primary-hover: #486450;
+  --accent: #D9886C;
+  --accent-hover: #B77157;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(90, 126, 100, 0.15);
+  --shadow: 0 10px 30px rgba(90, 126, 100, 0.08);
+  --radius: 20px;
+}
+
+/* 4. ANIME (Cherry Blossom & Bold Ink Outline) */
+[data-theme-style="anime"] {
+  --background: #FFE3EC;
+  --text: #2B2125;
+  --text-muted: #8F6B78;
+  --lavender: #FFD1DF;
+  --sky-blue: #E8F0FE;
+  --peach: #FFE5D9;
+  --mint: #D8F3DC;
+  --yellow: #FFF2B2;
+  --primary: #FF5A87;
+  --primary-hover: #E03E6C;
+  --accent: #FF9B3F;
+  --accent-hover: #E07D22;
+  --card-bg: #FFFFFF;
+  --card-border: #2B2125;
+  --shadow: 8px 8px 0px #2B2125;
+  --radius: 12px;
+}
+[data-theme-style="anime"] .glass-card {
+  border: 3px solid #2B2125 !important;
+  backdrop-filter: none !important;
+}
+[data-theme-style="anime"] .btn-primary,
+[data-theme-style="anime"] .btn-secondary,
+[data-theme-style="anime"] .btn-accent {
+  border: 3px solid #2B2125 !important;
+  box-shadow: 4px 4px 0px #2B2125 !important;
+}
+[data-theme-style="anime"] .btn-primary:active,
+[data-theme-style="anime"] .btn-accent:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0px #2B2125 !important;
+}
+
+/* 5. MINIMAL (Ultra Clean & High Contrast) */
+[data-theme-style="minimal"] {
+  --background: #F8F9FA;
+  --text: #1A1A1D;
+  --text-muted: #6C757D;
+  --lavender: #E9ECEF;
+  --sky-blue: #E9ECEF;
+  --peach: #F8F9FA;
+  --mint: #F8F9FA;
+  --yellow: #F8F9FA;
+  --primary: #1A1A1D;
+  --primary-hover: #333336;
+  --accent: #495057;
+  --accent-hover: #6C757D;
+  --card-bg: #FFFFFF;
+  --card-border: #DEE2E6;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --radius: 0px; /* Sharp corners */
+}
+[data-theme-style="minimal"] .glass-card {
+  border-radius: 0px !important;
+  border: 1px solid #DEE2E6 !important;
+}
+[data-theme-style="minimal"] .btn-primary, 
+[data-theme-style="minimal"] .btn-secondary, 
+[data-theme-style="minimal"] .btn-accent {
+  border-radius: 0px !important;
+}
+
+/* 6. CUTE (Sweet Strawberry Cream) */
+[data-theme-style="cute"] {
+  --background: #FFF5F7;
+  --text: #5D434B;
+  --text-muted: #9F7A85;
+  --lavender: #FFEAF0;
+  --sky-blue: #FFF5F7;
+  --peach: #FFE3E8;
+  --mint: #E8F8F5;
+  --yellow: #FFFDE7;
+  --primary: #FF8BA7;
+  --primary-hover: #FFA2B9;
+  --accent: #FFC6FF;
+  --accent-hover: #FFD6FF;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --card-border: rgba(255, 139, 167, 0.2);
+  --shadow: 0 8px 24px rgba(255, 139, 167, 0.12);
+  --radius: 32px; /* Super round corners */
+}
+
+/* 7. DARK (Sleek Slate & Violet) */
+[data-theme-style="dark"] {
+  --background: #15141A;
+  --text: #E5E1E6;
+  --text-muted: #95909A;
+  --lavender: #2B2836;
+  --sky-blue: #232D3B;
+  --peach: #3D2924;
+  --mint: #1B3530;
+  --yellow: #353428;
+  --primary: #A78BFA;
+  --primary-hover: #C084FC;
+  --accent: #F43F5E;
+  --accent-hover: #FB7185;
+  --card-bg: rgba(26, 24, 33, 0.85);
+  --card-border: rgba(167, 139, 250, 0.15);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --radius: 20px;
+}
+
+/* 8. NEON (Cyberpunk Glow) */
+[data-theme-style="neon"] {
+  --background: #030305;
+  --text: #39FF14; /* Cyber Lime */
+  --text-muted: #00FFCC; /* Cyber Cyan */
+  --lavender: rgba(0, 255, 204, 0.12);
+  --sky-blue: rgba(57, 255, 20, 0.1);
+  --peach: rgba(255, 0, 127, 0.1);
+  --mint: rgba(0, 255, 204, 0.08);
+  --yellow: rgba(255, 255, 0, 0.1);
+  --primary: #FF007F; /* Glowing Magenta */
+  --primary-hover: #FF3399;
+  --accent: #00E5FF;
+  --accent-hover: #54F0FF;
+  --card-bg: rgba(10, 10, 15, 0.95);
+  --card-border: #FF007F;
+  --shadow: 0 0 15px rgba(255, 0, 127, 0.35);
+  --radius: 12px;
+}
+[data-theme-style="neon"] .glass-card {
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.25) !important;
+}
+
+/* 9. COFFEE (Latte & Warm Mocha) */
+[data-theme-style="coffee"] {
+  --background: #F4EAE1;
+  --text: #4E3629;
+  --text-muted: #7E685A;
+  --lavender: #E8DCDE;
+  --sky-blue: #EAE0D5;
+  --peach: #DFD3C3;
+  --mint: #CBE3DB;
+  --yellow: #F7EBE1;
+  --primary: #7F5539;
+  --primary-hover: #9C6644;
+  --accent: #B07D62;
+  --accent-hover: #D69F7E;
+  --card-bg: rgba(255, 255, 255, 0.88);
+  --card-border: rgba(127, 85, 57, 0.18);
+  --shadow: 0 10px 24px rgba(127, 85, 57, 0.06);
+  --radius: 16px;
+}
+
+/* 10. STUDY (Lined Notebook & Pencil Ink) */
+[data-theme-style="study"] {
+  --background: #FAF8F5;
+  --text: #1B2A4A; /* Blue ink */
+  --text-muted: #566E8D;
+  --lavender: #EAEFF5;
+  --sky-blue: #EAEFF5;
+  --peach: #FAF8F5;
+  --mint: #E1F8F6;
+  --yellow: #FFFEE4;
+  --primary: #2B4C7E;
+  --primary-hover: #3D649F;
+  --accent: #E06C75;
+  --accent-hover: #EF7F88;
+  --card-bg: #FFFFFF;
+  --card-border: #2B4C7E;
+  --shadow: 6px 6px 0px rgba(43, 76, 126, 0.15);
+  --radius: 8px;
+  background-image: linear-gradient(rgba(43, 76, 126, 0.08) 1px, transparent 1px);
+  background-size: 100% 24px;
+}
+[data-theme-style="study"] .glass-card {
+  border: 2px solid #2B4C7E !important;
+  box-shadow: 6px 6px 0px rgba(43, 76, 126, 0.12) !important;
+}
+
+/* 11. GAMING (8-Bit Retro Grid) */
+[data-theme-style="gaming"] {
+  --background: #110B22;
+  --text: #00FF66; /* Retro Terminal Green */
+  --text-muted: #A396C2;
+  --lavender: rgba(167, 139, 250, 0.15);
+  --sky-blue: rgba(0, 255, 102, 0.1);
+  --peach: rgba(244, 63, 94, 0.15);
+  --mint: rgba(0, 255, 102, 0.08);
+  --yellow: rgba(255, 235, 59, 0.15);
+  --primary: #9D4EDD; /* Retro Purple */
+  --primary-hover: #B5179E;
+  --accent: #00FF66;
+  --accent-hover: #39FF88;
+  --card-bg: #1A142D;
+  --card-border: #9D4EDD;
+  --shadow: 0 0 10px rgba(157, 78, 221, 0.4);
+  --radius: 4px;
+}
+[data-theme-style="gaming"] .glass-card {
+  border: 4px double #9D4EDD !important;
+}
+[data-theme-style="gaming"] .btn-primary, 
+[data-theme-style="gaming"] .btn-secondary, 
+[data-theme-style="gaming"] .btn-accent {
+  border: 3px solid #9D4EDD !important;
+  border-radius: 4px !important;
+  text-transform: uppercase;
+}
+

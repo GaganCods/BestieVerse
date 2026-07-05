@@ -1,18 +1,21 @@
-// BestieVerse - Application Bootstrapper & Main Controller
+// BestieVerse - Application Bootstrapper & Main Controller (URL-encoded)
 
 import { initEffects, setEffectType, playSFX, triggerConfetti, triggerFireworks } from './utils.js';
 import { initNavigation, navigateTo } from './navigation.js';
 import { updateDailyStreak, unlockAchievement } from './storage.js';
-import { getCard } from './database.js';
+import { decodeCard } from './database.js';
 import { initCreatorForm, renderCreatorDashboard, renderCreatorHistory } from './creator.js';
-import { initFriendshipQuiz, renderResultPage, renderVerificationPage } from './quiz.js';
+import { initFriendshipQuiz, renderResultPage, renderVerificationPage, generateAndSaveFriendshipResult } from './quiz.js';
 import { jokesList } from './jokes.js';
 import { complimentsList, fortunesList } from './compliments.js';
 
-import { initFriendshipQuiz as originalInitQuiz, initGuessEmoji, initThisOrThat, initRapidFire } from './quiz.js';
+import { initSoundtrackPlayer, stopSoundtrackPlayer, handleMusicViewChange } from './music.js';
+
+import { initGuessEmoji, initThisOrThat, initRapidFire } from './quiz.js';
 import { initTTT, initRPS, initMemory, initSliding, initSimon, initScramble, initNumGuess, initColorMatch, initWhackAMole, initBubblePop } from './games.js';
 
 let currentLoadedCard = null;
+let currentLoadedCardHash = "";
 
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Init Canvas Particle Layer
@@ -39,6 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Shell Route Changed Listener
 function onRouteChanged(routeType, id) {
+  // Always shut down background soundtrack stream when leaving friend page
+  if (routeType !== 'friend') {
+    stopSoundtrackPlayer();
+  }
+
   if (routeType === 'landing') {
     // Reset theme style to default pastel
     document.documentElement.removeAttribute('data-theme-style');
@@ -61,20 +69,31 @@ function onRouteChanged(routeType, id) {
 }
 
 // Load Friend Card details & configure App Shell
-async function loadFriendExperience(cardId) {
-  const card = await getCard(cardId);
+function loadFriendExperience(cardId) {
+  // Decode configuration dynamically from the URL hash string
+  const card = decodeCard(cardId);
   if (!card) return;
+  
   currentLoadedCard = card;
+  currentLoadedCardHash = cardId;
 
   // Apply card style (11 themes)
   document.documentElement.setAttribute('data-theme-style', card.theme || 'pastel');
 
-  // Customize welcome texts
+  // Customize welcome texts — friend name comes from their own input
   const welcomeHeading = document.getElementById('welcome-heading');
   const welcomeText = document.getElementById('welcome-text');
-  if (welcomeHeading) welcomeHeading.textContent = `Hi, ${card.friendName}! 👋`;
+  // Update heading dynamically when friend types their name
+  const friendNameInput = document.getElementById('f-friend-name');
+  if (friendNameInput) {
+    friendNameInput.addEventListener('input', () => {
+      const name = friendNameInput.value.trim();
+      if (welcomeHeading) welcomeHeading.textContent = name ? `Hi, ${name}! 👋` : `Hi, Bestie! 👋`;
+    });
+  }
+  if (welcomeHeading) welcomeHeading.textContent = `Hey Bestie! 👋 — ${card.creatorName} made this for you`;
   if (welcomeText) {
-    welcomeText.textContent = `I made this BestieVerse card for you (aka ${card.nickname}) to celebrate our friendship. Complete the quizzes, play arcade games, stretch your challenges, and claim your certificate!`;
+    welcomeText.textContent = card.welcomeMessage || `I made this BestieVerse card to celebrate our friendship! Complete the quiz challenge, play arcade games, and claim your certificate!`;
   }
 
   // Customize tribute ending
@@ -82,12 +101,15 @@ async function loadFriendExperience(cardId) {
   const endingMessage = document.getElementById('ending-message');
   if (endingHeading) endingHeading.textContent = `Forever Besties! 💖`;
   if (endingMessage) {
-    endingMessage.innerHTML = `${card.message.replace(/\n/g, '<br>')}<br><br><strong>— Signed, ${card.creatorName}</strong>`;
+    const msg = card.welcomeMessage || '';
+    endingMessage.innerHTML = `${msg.replace(/\n/g, '<br>')}<br><br><strong>— Signed, ${card.creatorName}</strong>`;
   }
 
   // Hide certificate navigation elements initially
   document.querySelectorAll('.cert-nav-link').forEach(link => link.style.display = 'none');
   const endClaim = document.getElementById('end-claim-cert-btn');
+  const sigBox = document.getElementById('cert-recipient-signature-box');
+  if (sigBox) sigBox.style.display = 'none';
   if (endClaim) {
     endClaim.style.display = 'none';
     endClaim.textContent = "Claim Friendship Certificate! 📜";
@@ -100,15 +122,18 @@ async function loadFriendExperience(cardId) {
   // Load challenges
   initChallenges(card.challenges || [0, 1, 2, 3, 4]);
 
-  // Load custom quiz
+  // Load custom quiz (passing card config and encoded hash)
   const quizArea = document.getElementById('quiz-content-area');
   if (quizArea) {
-    initFriendshipQuiz(quizArea, card);
+    initFriendshipQuiz(quizArea, card, cardId);
   }
 
   // Render other views segments
   initTimeCapsuleView();
   renderAchievementsAndStickers();
+
+  // Initialize soundtrack settings
+  initSoundtrackPlayer(card);
 
   // Automatically start at welcome view
   navigateTo('welcome-view', onViewChange);
@@ -141,12 +166,17 @@ function renderDynamicGameTabs(enabledGames) {
 function onViewChange(viewId) {
   if (viewId === 'games-view' || viewId === 'welcome-view') {
     setEffectType('snow');
+  } else if (viewId === 'music-view') {
+    setEffectType('bubbles');
   } else if (viewId === 'ending-view') {
     setEffectType('stars');
     triggerFireworksEnding();
   } else {
     setEffectType('stars');
   }
+
+  // Handle music player mini-player toggles on page changes
+  handleMusicViewChange(viewId);
 
   switch (viewId) {
     case 'quiz-view':
@@ -157,6 +187,9 @@ function onViewChange(viewId) {
       break;
     case 'achievements-view':
       renderAchievementsAndStickers();
+      break;
+    case 'certificate-view':
+      generateAndSaveFriendshipResult();
       break;
   }
 }
@@ -544,8 +577,8 @@ function initQuizNav() {
 function triggerQuizTab(type, container) {
   playSFX('click');
   if (type === 'friendship') {
-    // If card details are loaded, pass them to quiz init
-    initFriendshipQuiz(container, currentLoadedCard);
+    // If card details are loaded, pass card details and hash to quiz
+    initFriendshipQuiz(container, currentLoadedCard, currentLoadedCardHash);
   } else if (type === 'guess-emoji') {
     initGuessEmoji(container);
   } else if (type === 'this-that') {

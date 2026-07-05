@@ -1,11 +1,11 @@
-// BestieVerse - Shell Routing and Tab Navigation Manager
+// BestieVerse - Shell Routing and Tab Navigation Manager (URL-encoded)
 
 import { playSFX } from './utils.js';
 import { unlockAchievement } from './storage.js';
-import { getCard } from './database.js';
+import { decodeCard, decodeResult } from './database.js';
 
 let visitedViews = new Set();
-const mainCategories = ['smile-view', 'games-view', 'quiz-view', 'meme-view', 'achievements-view'];
+const mainCategories = ['smile-view', 'music-view', 'games-view', 'quiz-view', 'meme-view', 'achievements-view'];
 
 // Watch Hash Changes
 export function initNavigation(routeChangeCallback, viewChangeCallback) {
@@ -23,6 +23,13 @@ export function initNavigation(routeChangeCallback, viewChangeCallback) {
   const startBtn = document.getElementById('start-btn');
   if (startBtn) {
     startBtn.onclick = () => {
+      const nameInput = document.getElementById('f-friend-name');
+      const name = nameInput ? nameInput.value.trim() : "";
+      if (!name) {
+        alert("Please enter your name to begin! 🌸");
+        if (nameInput) nameInput.focus();
+        return;
+      }
       playSFX('click');
       navigateTo('smile-view', viewChangeCallback);
     };
@@ -31,6 +38,13 @@ export function initNavigation(routeChangeCallback, viewChangeCallback) {
   const surpriseBtn = document.getElementById('random-surprise-btn');
   if (surpriseBtn) {
     surpriseBtn.onclick = () => {
+      const nameInput = document.getElementById('f-friend-name');
+      const name = nameInput ? nameInput.value.trim() : "";
+      if (!name) {
+        alert("Please enter your name to begin! 🌸");
+        if (nameInput) nameInput.focus();
+        return;
+      }
       playSFX('triumph');
       const targets = ['smile-view', 'games-view', 'quiz-view', 'meme-view'];
       const pick = targets[Math.floor(Math.random() * targets.length)];
@@ -70,16 +84,20 @@ async function handleShellRouting(callback) {
     showShell('creator-shell');
     if (callback) callback('create', null);
   } else if (hash.startsWith('#/dashboard/')) {
-    const cardId = hash.replace('#/dashboard/', '');
-    showShell('dashboard-shell');
-    if (callback) callback('dashboard', cardId);
-  } else if (hash.startsWith('#/f/')) {
-    const cardId = hash.replace('#/f/', '');
-    
-    // Check card details & passcode requirements
-    const card = await getCard(cardId);
+    const encodedCard = hash.replace('#/dashboard/', '');
+    const card = decodeCard(encodedCard);
     if (!card) {
-      alert("Oops! This BestieVerse link doesn't exist or was deleted. 💨");
+      alert("Invalid Dashboard URL! 💨");
+      window.location.hash = '#/';
+      return;
+    }
+    showShell('dashboard-shell');
+    if (callback) callback('dashboard', encodedCard);
+  } else if (hash.startsWith('#/f/')) {
+    const encodedCard = hash.replace('#/f/', '');
+    const card = decodeCard(encodedCard);
+    if (!card) {
+      alert("Oops! This BestieVerse link is invalid or corrupted. 💨");
       window.location.hash = '#/';
       return;
     }
@@ -101,7 +119,7 @@ async function handleShellRouting(callback) {
         if (input.value === card.passcode) {
           playSFX('success');
           overlay.style.display = 'none';
-          if (callback) callback('friend', cardId);
+          if (callback) callback('friend', encodedCard);
         } else {
           playSFX('fail');
           errorMsg.style.display = 'block';
@@ -117,16 +135,29 @@ async function handleShellRouting(callback) {
     } else {
       overlay.style.display = 'none';
       showShell('app-shell');
-      if (callback) callback('friend', cardId);
+      if (callback) callback('friend', encodedCard);
     }
 
   } else if (hash.startsWith('#/result/')) {
-    const cardId = hash.replace('#/result/', '');
+    const encodedResult = hash.replace('#/result/', '');
+    const result = decodeResult(encodedResult);
+    if (!result) {
+      alert("Invalid Results URL! 💨");
+      window.location.hash = '#/';
+      return;
+    }
     showShell('result-shell');
-    if (callback) callback('result', cardId);
+    if (callback) callback('result', encodedResult);
   } else if (hash.startsWith('#/verify/')) {
-    const cardId = hash.replace('#/verify/', '');
-    showShell('verify', cardId);
+    const encodedResult = hash.replace('#/verify/', '');
+    const result = decodeResult(encodedResult);
+    if (!result) {
+      alert("Invalid Verification URL! 💨");
+      window.location.hash = '#/';
+      return;
+    }
+    showShell('verify-shell');
+    if (callback) callback('verify', encodedResult);
   } else {
     // Default routing fallback
     showShell('landing-shell');
